@@ -1,32 +1,20 @@
-const wallets = JSON.parse(localStorage.getItem('wallets')) || [
-  { name: 'Cash', balance: 100000, transactions: [] },
-  { name: 'BCA', balance: 200000, transactions: [] },
-  { name: 'BRI', balance: 200000, transactions: [] },
-  { name: 'Mandiri', balance: 200000, transactions: [] },
-  { name: 'SeaBank', balance: 200000, transactions: [] },
-  { name: 'Gopay', balance: 200000, transactions: [] },
-  { name: 'Dana', balance: 200000, transactions: [] },
-  { name: 'Neo', balance: 200000, transactions: [] },
-];
+// Import Firebase functions from firebase-config.js
+import { db } from './firebase-config'; // Assuming you export db from firebase-config.js
+import { doc, getDoc, getDocs, updateDoc } from 'firebase/firestore';
 
-wallets.forEach((wallet) => {
-  if (!wallet.transactions) {
-    wallet.transactions = [];
-  }
-});
-
-localStorage.setItem('wallets', JSON.stringify(wallets));
-
+// Function to render wallets from Firestore
 async function renderWallets() {
   const walletContainer = document.getElementById('wallet-container');
   const totalBalanceDisplay = document.getElementById('total-balance');
 
-  const walletsSnapshot = await db.collection('wallets').get();
+  // Fetch wallets from Firestore
+  const walletsSnapshot = await getDocs(collection(db, 'wallets'));
   const wallets = walletsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
   walletContainer.innerHTML = '';
   let totalBalance = 0;
 
+  // Display each wallet
   wallets.forEach((wallet) => {
     const walletDiv = document.createElement('div');
     walletDiv.textContent = `${wallet.name}: Rp${wallet.balance.toLocaleString('id-ID')}`;
@@ -40,87 +28,105 @@ async function renderWallets() {
   totalBalanceDisplay.textContent = `Total Balance: Rp${totalBalance.toLocaleString('id-ID')}`;
 }
 
+// Function to add a transaction to a wallet in Firestore
 async function addTransaction(walletId, transaction) {
-  const walletRef = db.collection('wallets').doc(walletId);
+  const walletRef = doc(db, 'wallets', walletId);
 
-  const walletSnapshot = await walletRef.get();
-  if (walletSnapshot.exists) {
+  // Get the current wallet document from Firestore
+  const walletSnapshot = await getDoc(walletRef);
+  if (walletSnapshot.exists()) {
     const wallet = walletSnapshot.data();
     wallet.transactions.push(transaction);
 
+    // Update wallet balance based on the transaction
     wallet.balance += transaction.type === 'income' ? transaction.amount : -transaction.amount;
 
-    await walletRef.update(wallet);
+    // Save the updated wallet to Firestore
+    await updateDoc(walletRef, wallet);
     console.log('Transaction added to Firestore');
   } else {
     console.error('Wallet not found');
   }
 }
 
-function saveWallets() {
-  localStorage.setItem('wallets', JSON.stringify(wallets));
-}
+// Function to delete a transaction from a wallet in Firestore
+async function deleteTransaction(walletId, transactionIndex) {
+  const walletRef = doc(db, 'wallets', walletId);
 
-function deleteTransaction(walletIndex, transactionIndex) {
-  if (confirm('Are you sure you want to delete this transaction?')) {
-    const transaction = wallets[walletIndex].transactions[transactionIndex];
-    wallets[walletIndex].balance += transaction.type === 'income' ? -transaction.amount : transaction.amount;
-    wallets[walletIndex].transactions.splice(transactionIndex, 1);
-    saveWallets();
+  // Get the current wallet document from Firestore
+  const walletSnapshot = await getDoc(walletRef);
+  if (walletSnapshot.exists()) {
+    const wallet = walletSnapshot.data();
+    const transaction = wallet.transactions[transactionIndex];
+
+    // Adjust the balance by removing the transaction
+    wallet.balance += transaction.type === 'income' ? -transaction.amount : transaction.amount;
+    wallet.transactions.splice(transactionIndex, 1);
+
+    // Save the updated wallet to Firestore
+    await updateDoc(walletRef, wallet);
+    console.log('Transaction deleted from Firestore');
     renderWallets();
-    showTransactions(walletIndex);
+    showTransactions(walletId);
+  } else {
+    console.error('Wallet not found');
   }
 }
 
-function showTransactions(walletIndex) {
-  console.log(`Showing transactions for wallet index: ${walletIndex}`);
+// Function to show transactions of a wallet
+async function showTransactions(walletId) {
   const transactionList = document.getElementById('transaction-list');
-  const selectedWallet = wallets[walletIndex];
+
+  const walletRef = doc(db, 'wallets', walletId);
+  const walletSnapshot = await getDoc(walletRef);
+  const wallet = walletSnapshot.data();
   transactionList.innerHTML = '';
 
-  selectedWallet.transactions.forEach((transaction, transactionIndex) => {
+  wallet.transactions.forEach((transaction, transactionIndex) => {
     const li = document.createElement('li');
     li.innerHTML = `
-          <span>${transaction.date} - ${transaction.type}: Rp${transaction.amount.toLocaleString('id-ID')} (${transaction.description})</span>
-          <button onclick="editTransaction(${walletIndex}, ${transactionIndex})">Edit</button>
-          <button onclick="deleteTransaction(${walletIndex}, ${transactionIndex})">Delete</button>
-      `;
+      <span>${transaction.date} - ${transaction.type}: Rp${transaction.amount.toLocaleString('id-ID')} (${transaction.description})</span>
+      <button onclick="editTransaction(${walletId}, ${transactionIndex})">Edit</button>
+      <button onclick="deleteTransaction(${walletId}, ${transactionIndex})">Delete</button>
+    `;
     transactionList.appendChild(li);
   });
 
-  // Tombol Tambah Transaksi
+  // Add Transaction button
   const addButton = document.createElement('button');
   addButton.textContent = 'Add Transaction';
   addButton.id = 'add-transaction-btn';
   addButton.addEventListener('click', () => {
-    openTransactionForm(walletIndex);
+    openTransactionForm(walletId);
   });
   transactionList.appendChild(addButton);
 
-  // Tombol Transfer Antar Dompet
+  // Transfer Between Wallets button
   const transferButton = document.createElement('button');
   transferButton.textContent = 'Transfer Between Wallets';
   transferButton.id = 'transfer-btn';
   transferButton.addEventListener('click', () => {
-    openTransferForm(walletIndex);
+    openTransferForm(walletId);
   });
   transactionList.appendChild(transferButton);
 }
-// Fungsi untuk membuka form transaksi
-function openTransactionForm(walletIndex, transactionIndex = null) {
+
+// Function to open the transaction form
+function openTransactionForm(walletId, transactionIndex = null) {
   const url = new URL('transaction_form.html', window.location.origin);
-  url.searchParams.append('walletIndex', walletIndex);
+  url.searchParams.append('walletId', walletId);
   if (transactionIndex !== null) {
     url.searchParams.append('transactionIndex', transactionIndex);
   }
-  window.location.href = url; // Mengarahkan pengguna ke halaman form transaksi
+  window.location.href = url; // Navigate to the transaction form page
 }
 
-// Fungsi untuk membuka form transfer antar wallet
-function openTransferForm(walletIndex) {
+// Function to open the transfer form
+function openTransferForm(walletId) {
   const url = new URL('transfer_form.html', window.location.origin);
-  url.searchParams.append('walletIndex', walletIndex);
-  window.location.href = url; // Mengarahkan pengguna ke halaman form transfer
+  url.searchParams.append('walletId', walletId);
+  window.location.href = url; // Navigate to the transfer form page
 }
 
+// Call renderWallets to load the wallets on page load
 renderWallets();

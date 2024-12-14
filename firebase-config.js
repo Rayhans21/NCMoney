@@ -1,4 +1,7 @@
-// Add your Firebase configuration here
+// firebase-config.js
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+
 const firebaseConfig = {
   apiKey: 'AIzaSyA44izAiM1ghn11_zf77M1zHSh0jZo49Eo',
   authDomain: 'ncmoney-f340b.firebaseapp.com',
@@ -11,3 +14,5 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+export { db };
