@@ -128,5 +128,63 @@ function openTransferForm(walletId) {
   window.location.href = url; // Navigate to the transfer form page
 }
 
+// Function to initialize wallets collection in Firestore (only run once)
+async function initializeWallets() {
+  const wallets = [
+    {
+      name: 'Cash',
+      balance: 100000,
+      transactions: [{ date: '2024-12-14', type: 'income', amount: 50000, description: 'Initial deposit' }],
+    },
+    {
+      name: 'BCA',
+      balance: 200000,
+      transactions: [],
+    },
+    {
+      name: 'BRI',
+      balance: 200000,
+      transactions: [],
+    },
+    {
+      name: 'Mandiri',
+      balance: 200000,
+      transactions: [],
+    },
+    {
+      name: 'SeaBank',
+      balance: 200000,
+      transactions: [],
+    },
+    {
+      name: 'Gopay',
+      balance: 200000,
+      transactions: [],
+    },
+    {
+      name: 'Dana',
+      balance: 200000,
+      transactions: [],
+    },
+    {
+      name: 'Neo',
+      balance: 200000,
+      transactions: [],
+    },
+  ];
+
+  // Add each wallet to Firestore
+  const walletsCollectionRef = collection(db, 'wallets');
+
+  wallets.forEach(async (wallet) => {
+    await addDoc(walletsCollectionRef, wallet);
+  });
+
+  console.log('Wallets initialized in Firestore');
+}
+
+// Call initializeWallets() only once to populate the Firestore with initial data
+initializeWallets();
+
 // Call renderWallets to load the wallets on page load
 renderWallets();
