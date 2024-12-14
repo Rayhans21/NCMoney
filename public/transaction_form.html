@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Form</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <h1>Transaction Form</h1>
+    </header>
+
+    <main>
+        <form id="transaction-form">
+            <label for="date">Date:</label>
+            <input type="date" id="date" required>
+
+            <label for="type">Type:</label>
+            <select id="type" required>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+            </select>
+
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount" required>
+
+            <label for="description">Description:</label>
+            <input type="text" id="description">
+
+            <button type="submit">Save</button>
+            <button type="button" onclick="cancelTransaction()">Cancel</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Wallet Manager</p>
+    </footer>
+
+    <script src="transaction_form.js"></script>
+</body>
+
+</html>

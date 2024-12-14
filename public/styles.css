@@ -1,35 +1,157 @@
+/* General styles */
 body {
   font-family: Arial, sans-serif;
+  line-height: 1.6;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+  background-color: #f9f9f9;
+  color: #333;
 }
 
 header {
-  background: #4caf50;
-  color: white;
+  background-color: #007bff;
+  color: #fff;
   text-align: center;
-  padding: 1rem;
+  padding: 1rem 0;
+}
+
+header h1 {
+  margin: 0;
 }
 
 main {
-  padding: 2rem;
+  padding: 1rem;
 }
 
+footer {
+  background-color: #f4f4f4;
+  text-align: center;
+  padding: 1rem 0;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  border-top: 1px solid #ddd;
+}
+
+/* Wallet section */
+#wallet-section {
+  margin-bottom: 2rem;
+}
+
+#wallet-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.wallet {
+  background-color: #e6f7ff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  flex: 1 1 calc(33.333% - 1rem);
+  min-width: 150px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.wallet:hover {
+  transform: scale(1.05);
+  background-color: #cceeff;
+}
+
+/* Total balance */
+#total-section {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+#total-section h3 {
+  font-size: 1.5rem;
+  color: #007bff;
+}
+
+/* Transaction list */
+#transaction-section {
+  margin-bottom: 2rem;
+}
+
+#transaction-list {
+  list-style: none;
+  padding: 0;
+}
+
+#transaction-list li {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#transaction-list li button {
+  margin-left: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#transaction-list li button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Forms */
 form {
+  max-width: 500px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
-button {
+form label {
+  font-weight: bold;
+}
+
+form input,
+form select,
+form button {
   padding: 0.5rem;
-  background: #4caf50;
+  font-size: 1rem;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+form button {
+  background-color: #007bff;
   color: white;
   border: none;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-ul {
-  list-style-type: none;
-  padding: 0;
+form button:hover {
+  background-color: #0056b3;
+}
+
+form button[type='button'] {
+  background-color: #ccc;
+}
+
+form button[type='button']:hover {
+  background-color: #999;
 }
