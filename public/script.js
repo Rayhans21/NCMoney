@@ -1,27 +1,60 @@
 const wallets = JSON.parse(localStorage.getItem('wallets')) || [
   { name: 'Cash', balance: 100000, transactions: [] },
   { name: 'BCA', balance: 200000, transactions: [] },
+  { name: 'BRI', balance: 200000, transactions: [] },
   { name: 'Mandiri', balance: 200000, transactions: [] },
   { name: 'SeaBank', balance: 200000, transactions: [] },
   { name: 'Gopay', balance: 200000, transactions: [] },
   { name: 'Dana', balance: 200000, transactions: [] },
+  { name: 'Neo', balance: 200000, transactions: [] },
 ];
 
-function renderWallets() {
+wallets.forEach((wallet) => {
+  if (!wallet.transactions) {
+    wallet.transactions = [];
+  }
+});
+
+localStorage.setItem('wallets', JSON.stringify(wallets));
+
+async function renderWallets() {
   const walletContainer = document.getElementById('wallet-container');
   const totalBalanceDisplay = document.getElementById('total-balance');
 
+  const walletsSnapshot = await db.collection('wallets').get();
+  const wallets = walletsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
   walletContainer.innerHTML = '';
-  wallets.forEach((wallet, index) => {
+  let totalBalance = 0;
+
+  wallets.forEach((wallet) => {
     const walletDiv = document.createElement('div');
     walletDiv.textContent = `${wallet.name}: Rp${wallet.balance.toLocaleString('id-ID')}`;
     walletDiv.className = 'wallet';
-    walletDiv.addEventListener('click', () => showTransactions(index));
+    walletDiv.addEventListener('click', () => showTransactions(wallet.id));
     walletContainer.appendChild(walletDiv);
+
+    totalBalance += wallet.balance;
   });
 
-  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
   totalBalanceDisplay.textContent = `Total Balance: Rp${totalBalance.toLocaleString('id-ID')}`;
+}
+
+async function addTransaction(walletId, transaction) {
+  const walletRef = db.collection('wallets').doc(walletId);
+
+  const walletSnapshot = await walletRef.get();
+  if (walletSnapshot.exists) {
+    const wallet = walletSnapshot.data();
+    wallet.transactions.push(transaction);
+
+    wallet.balance += transaction.type === 'income' ? transaction.amount : -transaction.amount;
+
+    await walletRef.update(wallet);
+    console.log('Transaction added to Firestore');
+  } else {
+    console.error('Wallet not found');
+  }
 }
 
 function saveWallets() {
